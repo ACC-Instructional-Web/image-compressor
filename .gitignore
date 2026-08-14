@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# Python virtualenv (was checked in; keep it out of the repo)
+image_env/
+
+# Stale PyInstaller output and old app bundles from the Tkinter era.
+# These still exist on disk locally -- they are just never pushed.
+build/
+dist/
+Archive.zip
+Mass Image Compressor.app/
+Roberts Image Compressor
+*.pyc
+__pycache__/
+
+# Never commit client photos
+test-images/
+*.heic
+*.HEIC

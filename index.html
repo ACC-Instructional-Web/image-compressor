@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Image Compressor</title>
+<meta name="description" content="Shrink photos for the website. Runs entirely in your browser.">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23C86A15'/><rect x='8' y='11' width='16' height='11' rx='2' fill='none' stroke='white' stroke-width='2'/><circle cx='16' cy='16.5' r='3' fill='white'/></svg>">
+</head>
+<body>
+
+<header class="bar">
+  <span class="bar__mark">Image Compressor</span>
+  <span class="bar__mode" id="mode-notice" role="status"></span>
+</header>
+
+<main class="stage">
+
+  <!-- Intake -------------------------------------------------------------- -->
+  <section class="intake" id="dropzone">
+    <div class="intake__inner">
+      <h1 class="intake__title">Drop photos here</h1>
+      <p class="intake__sub">
+        They are compressed on this computer and never uploaded anywhere.
+      </p>
+      <div class="intake__actions">
+        <button class="btn btn--primary" id="choose-folder" type="button">Choose folder</button>
+        <button class="btn" id="choose-files" type="button">Choose files</button>
+      </div>
+      <p class="intake__formats">JPEG · PNG · HEIC · TIFF · WebP</p>
+    </div>
+  </section>
+
+  <input type="file" id="file-input" multiple hidden
+         accept="image/*,.heic,.heif,.tif,.tiff">
+  <input type="file" id="dir-input" webkitdirectory multiple hidden>
+
+  <!-- Settings ------------------------------------------------------------ -->
+  <section class="settings">
+    <div class="presets" role="group" aria-label="Compression preset">
+      <button class="preset is-active" type="button" data-preset="web">Web</button>
+      <button class="preset" type="button" data-preset="high">High quality</button>
+      <button class="preset" type="button" data-preset="max">Maximum compression</button>
+    </div>
+
+    <p class="settings__readout" id="settings-readout"></p>
+
+    <details class="advanced">
+      <summary class="advanced__toggle">Advanced</summary>
+      <div class="advanced__grid">
+        <label class="field">
+          <span class="field__label">Longest side</span>
+          <span class="field__control">
+            <input type="number" id="max-dimension" min="200" max="12000" step="100" value="3000">
+            <span class="field__unit">px</span>
+          </span>
+          <span class="field__hint">Larger images are scaled down. Smaller ones are left alone.</span>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Quality <span class="field__value" id="quality-value">82</span></span>
+          <span class="field__control">
+            <input type="range" id="quality" min="40" max="95" step="1" value="82">
+          </span>
+          <span class="field__hint">Lower means smaller files and more visible artefacts.</span>
+        </label>
+
+        <fieldset class="field">
+          <legend class="field__label">Format</legend>
+          <span class="field__control field__control--radios">
+            <label class="radio"><input type="radio" name="format" value="image/webp" checked> WebP</label>
+            <label class="radio"><input type="radio" name="format" value="image/jpeg"> JPEG</label>
+          </span>
+          <span class="field__hint">WebP is smaller. WordPress has supported it since 5.8.</span>
+        </fieldset>
+      </div>
+    </details>
+  </section>
+
+  <!-- Readout ------------------------------------------------------------- -->
+  <section class="readout" id="readout" hidden aria-live="polite">
+    <div class="readout__figures">
+      <span class="readout__from" id="total-before">—</span>
+      <span class="readout__arrow" aria-hidden="true">→</span>
+      <span class="readout__to" id="total-after">—</span>
+    </div>
+    <div class="readout__meta">
+      <span class="readout__saved" id="total-saved"></span>
+      <span class="readout__count" id="total-count"></span>
+    </div>
+    <div class="readout__bar">
+      <div class="readout__fill" id="total-fill"></div>
+    </div>
+  </section>
+
+  <!-- Actions ------------------------------------------------------------- -->
+  <section class="actions" id="actions" hidden>
+    <button class="btn btn--primary btn--wide" id="save" type="button"></button>
+    <button class="btn" id="clear" type="button">Start over</button>
+  </section>
+
+  <!-- Ledger -------------------------------------------------------------- -->
+  <section class="ledger" id="ledger" hidden>
+    <h2 class="ledger__heading">Images</h2>
+    <ul class="ledger__list" id="ledger-list"></ul>
+  </section>
+
+</main>
+
+<div class="drop-veil" id="drop-veil" aria-hidden="true">
+  <span>Release to add photos</span>
+</div>
+
+<template id="row-template">
+  <li class="row">
+    <div class="row__thumb"><img alt=""></div>
+    <div class="row__body">
+      <p class="row__name"></p>
+      <div class="row__bar"><div class="row__fill"></div></div>
+      <p class="row__stats"></p>
+    </div>
+    <p class="row__delta"></p>
+  </li>
+</template>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

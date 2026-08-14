@@ -1,0 +1,486 @@
+/* ===========================================================================
+   Light table by day, darkroom by night.
+   Photographers judge images in two places: on a daylight-balanced light table,
+   and under a safelight. This page is the first in light mode and the second in
+   dark mode -- and amber, the one colour that survives both, carries every action.
+   =========================================================================== */
+
+:root {
+  color-scheme: light dark;
+
+  --room:       #E4E9EF;
+  --table:      #FFFFFF;
+  --ink:        #14171B;
+  --muted:      #6D7986;
+  --rule:       #D2DAE3;
+  --rule-soft:  #E7ECF2;
+  --amber:      #B85F0E;
+  --amber-lift: #FBEBD9;
+  --alert:      #A32118;
+  --shadow:     0 1px 2px rgba(20, 23, 27, .06), 0 12px 32px -12px rgba(20, 23, 27, .18);
+
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Avenir Next", Inter, system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, "Cascadia Mono", monospace;
+
+  --step: .35rem;
+  --radius: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --room:       #0E1013;
+    --table:      #191D22;
+    --ink:        #ECEFF3;
+    --muted:      #8C97A4;
+    --rule:       #2C333B;
+    --rule-soft:  #22282F;
+    --amber:      #E8933F;
+    --amber-lift: #2A1F13;
+    --alert:      #F0736A;
+    --shadow:     0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px -12px rgba(0, 0, 0, .7);
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Sections below use display:grid/flex, which would otherwise beat the hidden attribute. */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--room);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: .9375rem;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Every numeric readout is an instrument reading: monospaced, tabular, tight. */
+.readout__figures, .row__stats, .row__delta, .settings__readout,
+.field__value, .readout__meta {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Utility bar ---------------------------------------------------------- */
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .8rem clamp(1rem, 4vw, 2.5rem);
+  border-bottom: 1px solid var(--rule);
+  background: var(--table);
+}
+
+.bar__mark {
+  font-weight: 600;
+  letter-spacing: -.01em;
+}
+
+.bar__mode {
+  font-family: var(--mono);
+  font-size: .6875rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--muted);
+  text-align: right;
+}
+
+/* --- Stage ---------------------------------------------------------------- */
+
+.stage {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 4vw, 2.5rem) clamp(1rem, 4vw, 2.5rem) 5rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+/* --- Intake --------------------------------------------------------------- */
+
+.intake {
+  background: var(--table);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: clamp(2rem, 7vw, 4rem) 1.5rem;
+  text-align: center;
+  transition: border-color .18s, background .18s;
+}
+
+.intake.is-hot {
+  border-color: var(--amber);
+  background: var(--amber-lift);
+}
+
+.intake__inner { display: grid; gap: .75rem; justify-items: center; }
+
+.intake__title {
+  margin: 0;
+  font-size: clamp(1.5rem, 4.5vw, 2.125rem);
+  font-weight: 600;
+  letter-spacing: -.025em;
+}
+
+.intake__sub {
+  margin: 0;
+  max-width: 34ch;
+  color: var(--muted);
+}
+
+.intake__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .625rem;
+  justify-content: center;
+  margin-top: .5rem;
+}
+
+.intake__formats {
+  margin: .25rem 0 0;
+  font-family: var(--mono);
+  font-size: .6875rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--muted);
+}
+
+/* --- Buttons -------------------------------------------------------------- */
+
+.btn {
+  font: inherit;
+  font-weight: 500;
+  padding: .55rem 1.1rem;
+  border-radius: 7px;
+  border: 1px solid var(--rule);
+  background: var(--table);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color .15s, background .15s, transform .05s;
+}
+
+.btn:hover { border-color: var(--muted); }
+.btn:active { transform: translateY(1px); }
+
+.btn--primary {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #FFFFFF;
+}
+
+@media (prefers-color-scheme: dark) {
+  .btn--primary { color: #17120B; }
+}
+
+.btn--primary:hover { filter: brightness(1.07); border-color: var(--amber); }
+.btn--wide { padding-inline: 1.6rem; }
+
+.btn:disabled { opacity: .45; cursor: default; transform: none; }
+
+:where(button, input, summary, a):focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+/* --- Settings ------------------------------------------------------------- */
+
+.settings {
+  background: var(--table);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 1rem clamp(1rem, 3vw, 1.5rem) .875rem;
+  display: grid;
+  gap: .75rem;
+}
+
+.presets { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+.preset {
+  font: inherit;
+  font-size: .875rem;
+  padding: .4rem .85rem;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+
+.preset:hover { color: var(--ink); border-color: var(--muted); }
+
+.preset.is-active {
+  color: var(--amber);
+  border-color: var(--amber);
+  background: var(--amber-lift);
+  font-weight: 500;
+}
+
+.settings__readout {
+  margin: 0;
+  font-size: .75rem;
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+
+.advanced { border-top: 1px solid var(--rule-soft); padding-top: .625rem; }
+
+.advanced__toggle {
+  cursor: pointer;
+  font-size: .8125rem;
+  color: var(--muted);
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .15rem 0;
+}
+
+.advanced__toggle::-webkit-details-marker { display: none; }
+.advanced__toggle::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 5px solid currentColor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform .15s;
+}
+.advanced[open] .advanced__toggle::before { transform: rotate(90deg); }
+.advanced__toggle:hover { color: var(--ink); }
+
+.advanced__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1.25rem;
+  padding: 1rem .125rem .25rem;
+}
+
+.field { display: grid; gap: .4rem; border: 0; margin: 0; padding: 0; min-width: 0; }
+
+.field__label {
+  font-family: var(--mono);
+  font-size: .6875rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--muted);
+  padding: 0;
+}
+
+.field__value { color: var(--amber); }
+
+.field__control { display: flex; align-items: center; gap: .5rem; }
+.field__control--radios { gap: 1rem; }
+
+.field__hint { font-size: .75rem; color: var(--muted); line-height: 1.45; }
+
+.field input[type="number"] {
+  font: inherit;
+  font-family: var(--mono);
+  width: 6.5rem;
+  padding: .4rem .55rem;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--room);
+  color: var(--ink);
+}
+
+.field__unit { font-family: var(--mono); font-size: .8125rem; color: var(--muted); }
+
+.field input[type="range"] { flex: 1; accent-color: var(--amber); min-width: 0; }
+
+.radio { display: inline-flex; align-items: center; gap: .35rem; font-size: .875rem; }
+.radio input { accent-color: var(--amber); }
+
+/* --- Readout -------------------------------------------------------------- */
+/* The signature: the page's whole purpose is mass removed, so the totals get
+   instrument treatment and a bar whose empty portion IS the saving. */
+
+.readout {
+  background: var(--table);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 1.25rem clamp(1rem, 3vw, 1.5rem);
+  display: grid;
+  gap: .75rem;
+}
+
+.readout__figures {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .5rem .75rem;
+  font-size: clamp(1.5rem, 5.5vw, 2.5rem);
+  font-weight: 500;
+  letter-spacing: -.03em;
+  line-height: 1.1;
+}
+
+.readout__from { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+.readout__arrow { color: var(--muted); font-size: .7em; }
+.readout__to { color: var(--amber); }
+
+.readout__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--muted);
+}
+
+.readout__bar, .row__bar {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  /* The track is the original size. Hatching marks the bytes that came off. */
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--rule-soft) 0 4px,
+    transparent 4px 8px
+  );
+  background-color: transparent;
+  box-shadow: inset 0 0 0 1px var(--rule-soft);
+}
+
+.readout__fill, .row__fill {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: var(--amber);
+  transition: width .5s cubic-bezier(.2, .7, .3, 1);
+}
+
+/* --- Actions -------------------------------------------------------------- */
+
+.actions { display: flex; flex-wrap: wrap; gap: .625rem; align-items: center; }
+
+/* --- Ledger --------------------------------------------------------------- */
+
+.ledger {
+  background: var(--table);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 1rem clamp(1rem, 3vw, 1.5rem) .5rem;
+}
+
+.ledger__heading {
+  margin: 0 0 .5rem;
+  font-family: var(--mono);
+  font-size: .6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--muted);
+}
+
+.ledger__list { list-style: none; margin: 0; padding: 0; }
+
+.row {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: .875rem;
+  padding: .7rem 0;
+  border-top: 1px solid var(--rule-soft);
+  animation: row-in .3s cubic-bezier(.2, .7, .3, 1) both;
+}
+
+.row:first-child { border-top: 0; }
+
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.row__thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--room);
+  box-shadow: inset 0 0 0 1px var(--rule-soft);
+}
+
+.row__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Until a thumbnail arrives the img has no src, which Chrome draws as a broken-image icon. */
+.row__thumb img:not([src]) { display: none; }
+
+.row__body { min-width: 0; display: grid; gap: .3rem; }
+
+.row__name {
+  margin: 0;
+  font-size: .875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row__stats { margin: 0; font-size: .75rem; color: var(--muted); }
+
+.row__delta {
+  margin: 0;
+  font-size: .875rem;
+  font-weight: 500;
+  color: var(--amber);
+  white-space: nowrap;
+}
+
+/* Working */
+.row.is-working .row__fill {
+  width: 100% !important;
+  opacity: .3;
+  animation: pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes pulse { 50% { opacity: .08; } }
+
+/* Failed -- the row stays, says what happened, and the batch carries on. */
+.row.is-error .row__name { color: var(--muted); }
+.row.is-error .row__stats { color: var(--alert); }
+.row.is-error .row__bar { display: none; }
+.row.is-error .row__delta { color: var(--alert); }
+
+/* Left alone, or converted but no smaller -- neither is a saving, so neither gets the accent. */
+.row.is-kept .row__delta,
+.row.is-grown .row__delta { color: var(--muted); }
+
+/* --- Drop veil ------------------------------------------------------------ */
+
+.drop-veil {
+  position: fixed;
+  inset: 0;
+  display: none;
+  place-items: center;
+  background: color-mix(in srgb, var(--room) 88%, transparent);
+  backdrop-filter: blur(2px);
+  z-index: 10;
+  font-size: 1.25rem;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.drop-veil::after {
+  content: "";
+  position: absolute;
+  inset: clamp(.75rem, 2vw, 1.5rem);
+  border: 2px dashed var(--amber);
+  border-radius: 14px;
+}
+
+body.is-dragging .drop-veil { display: grid; }
+
+/* --- Motion --------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

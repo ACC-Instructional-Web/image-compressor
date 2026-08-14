@@ -1,0 +1,3 @@
+# glob and tkinter are Python standard library modules -- do not pip install them.
+# (Tkinter ships with Python; on Homebrew Python run `brew install python-tk`.)
+Pillow>=11.0
