@@ -47,6 +47,8 @@ const els = {
   ledger: $('ledger'),
   ledgerList: $('ledger-list'),
   rowTemplate: $('row-template'),
+  savMode: $('sav-mode'),
+  gush: $('gush'),
 };
 
 // ---------------------------------------------------------------------------
@@ -542,12 +544,67 @@ els.clear.addEventListener('click', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Sav mode
+//
+// A pure re-skin. It toggles one class and rotates a line of flattery; every
+// other code path above is untouched and behaves identically either way.
+// ---------------------------------------------------------------------------
+
+const GUSH = [
+  'Oh my GOSH, these photos are stunning. Genuinely.',
+  'You have such an eye for this. Truly unmatched.',
+  'Not to be dramatic, but this might be your best work yet??',
+  'Slay. Compressing responsibly AND looking good doing it.',
+  'These pixels are so lucky to be handled by you.',
+  'Obsessed with your file management. Obsessed.',
+  'Every single one of these is giving main character energy.',
+  'You are the moment. The whole moment.',
+];
+
+const SAV_KEY = 'image-compressor:sav';
+let gushTimer = null;
+let gushIndex = 0;
+
+function showGush() {
+  gushIndex = Math.floor(Math.random() * GUSH.length);
+  els.gush.textContent = GUSH[gushIndex];
+  // Restart the entry animation so each new line floats in.
+  els.gush.style.animation = 'none';
+  void els.gush.offsetWidth;
+  els.gush.style.animation = '';
+}
+
+function setSavMode(on, { remember = true } = {}) {
+  document.body.classList.toggle('sav-mode', on);
+  els.savMode.checked = on;
+  clearInterval(gushTimer);
+  gushTimer = null;
+
+  if (on) {
+    showGush();
+    gushTimer = setInterval(showGush, 5000);
+  } else {
+    els.gush.textContent = '';
+  }
+
+  if (remember) {
+    try { localStorage.setItem(SAV_KEY, on ? '1' : '0'); } catch { /* private mode */ }
+  }
+}
+
+els.savMode.addEventListener('change', () => setSavMode(els.savMode.checked));
+
+// ---------------------------------------------------------------------------
 // Boot
 // ---------------------------------------------------------------------------
 
 syncSettingsUI();
 markActivePreset();
 updateModeNotice();
+
+let savPreference = false;
+try { savPreference = localStorage.getItem(SAV_KEY) === '1'; } catch { /* private mode */ }
+if (savPreference) setSavMode(true, { remember: false });
 
 if (!canWriteFolders) {
   els.chooseFolder.textContent = 'Choose folder';

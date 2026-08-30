@@ -12,7 +12,14 @@
 
 <header class="bar">
   <span class="bar__mark">Image Compressor</span>
-  <span class="bar__mode" id="mode-notice" role="status"></span>
+  <div class="bar__right">
+    <span class="bar__mode" id="mode-notice" role="status"></span>
+    <label class="sav-switch">
+      <input type="checkbox" id="sav-mode">
+      <span class="sav-switch__track" aria-hidden="true"><span class="sav-switch__knob"></span></span>
+      <span class="sav-switch__name">Sav</span>
+    </label>
+  </div>
 </header>
 
 <main class="stage">
@@ -24,6 +31,7 @@
       <p class="intake__sub">
         They are compressed on this computer and never uploaded anywhere.
       </p>
+      <p class="gush" id="gush" aria-hidden="true"></p>
       <div class="intake__actions">
         <button class="btn btn--primary" id="choose-folder" type="button">Choose folder</button>
         <button class="btn" id="choose-files" type="button">Choose files</button>
