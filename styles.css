@@ -80,6 +80,13 @@ body {
   letter-spacing: -.01em;
 }
 
+.bar__right {
+  display: flex;
+  align-items: center;
+  gap: clamp(.75rem, 3vw, 1.25rem);
+  min-width: 0;
+}
+
 .bar__mode {
   font-family: var(--mono);
   font-size: .6875rem;
@@ -88,6 +95,63 @@ body {
   color: var(--muted);
   text-align: right;
 }
+
+/* --- Sav switch ----------------------------------------------------------- */
+
+.sav-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  cursor: pointer;
+  user-select: none;
+  flex: none;
+}
+
+/* Visually hidden, but still the real focusable control. */
+.sav-switch input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  margin: 0;
+}
+
+.sav-switch__track {
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--rule-soft);
+  box-shadow: inset 0 0 0 1px var(--rule);
+  display: grid;
+  align-items: center;
+  padding: 2px;
+  transition: background .18s, box-shadow .18s;
+}
+
+.sav-switch__knob {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--table);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+  transform: translateX(0);
+  transition: transform .2s cubic-bezier(.2, .7, .3, 1), background .18s;
+}
+
+.sav-switch input:checked + .sav-switch__track { background: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
+.sav-switch input:checked + .sav-switch__track .sav-switch__knob { transform: translateX(14px); }
+.sav-switch input:focus-visible + .sav-switch__track { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+.sav-switch__name {
+  font-family: var(--mono);
+  font-size: .6875rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--muted);
+}
+
+/* The fawning line. Empty and out of the layout until Sav mode fills it in. */
+.gush { display: none; }
 
 /* --- Stage ---------------------------------------------------------------- */
 
@@ -474,6 +538,209 @@ body {
 }
 
 body.is-dragging .drop-veil { display: grid; }
+
+/* ===========================================================================
+   SAV MODE 💖
+   Everything above is one restrained instrument. This is the opposite, on
+   purpose. It is a pure re-skin: the palette tokens get overwritten, a few
+   decorative pseudo-elements get added, and not one line of behaviour changes.
+   Scoped entirely to body.sav-mode so flipping the switch off restores the darkroom.
+   =========================================================================== */
+
+body.sav-mode {
+  /* Pinned to light regardless of the OS preference -- a "dark Barbie" mode
+     would be a completely different (and much more tasteful) idea. */
+  color-scheme: light;
+
+  --room:       #FFD6EC;
+  --table:      #FFF6FB;
+  --ink:        #57123A;
+  --muted:      #C25E9B;
+  --rule:       #FF9FD0;
+  --rule-soft:  #FFDCEE;
+  --amber:      #FF1F8F;
+  --amber-lift: #FFE4F2;
+  --alert:      #C2185B;
+  --shadow:     0 2px 4px rgba(255, 31, 143, .18), 0 18px 40px -14px rgba(255, 31, 143, .45);
+
+  --sans: "Avenir Next Rounded", "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", system-ui, sans-serif;
+  --display: "Snell Roundhand", "Brush Script MT", "Savoye LET", "Comic Sans MS", cursive;
+  --radius: 24px;
+
+  background:
+    radial-gradient(1200px 600px at 15% -10%, #FFFFFF 0%, transparent 60%),
+    linear-gradient(160deg, #FFD6EC 0%, #FFC2E4 45%, #FFB3DE 100%);
+  background-attachment: fixed;
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><path d="M14 25S3.5 17.8 3.5 10.9A6.4 6.4 0 0 1 14 6.4a6.4 6.4 0 0 1 10.5 4.5C24.5 17.8 14 25 14 25z" fill="%23FF1F8F" stroke="%23FFFFFF" stroke-width="2"/></svg>') 6 4, auto;
+}
+
+/* Panels: rounder, glowier, and outlined in candy. */
+body.sav-mode .intake,
+body.sav-mode .settings,
+body.sav-mode .readout,
+body.sav-mode .ledger {
+  border: 2px solid var(--rule);
+  box-shadow: var(--shadow);
+  background:
+    linear-gradient(#FFFFFF, var(--table));
+}
+
+body.sav-mode .bar {
+  border-bottom: 2px solid var(--rule);
+  background: linear-gradient(90deg, #FFF6FB, #FFE4F2);
+}
+
+body.sav-mode .bar__mark {
+  font-family: var(--display);
+  font-size: 1.45rem;
+  font-weight: 400;
+  color: var(--amber);
+}
+
+body.sav-mode .bar__mark::after { content: " 💅"; font-family: var(--sans); font-size: .8rem; }
+
+/* The headline: script, huge, and flanked by sparkles that will not sit still. */
+body.sav-mode .intake__title {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(2rem, 7vw, 3.25rem);
+  letter-spacing: 0;
+  color: var(--amber);
+  text-shadow: 0 2px 0 #FFFFFF, 0 4px 14px rgba(255, 31, 143, .4);
+}
+
+body.sav-mode .intake__title::before { content: "✨ "; }
+body.sav-mode .intake__title::after  { content: " ✨"; }
+
+body.sav-mode .intake__title::before,
+body.sav-mode .intake__title::after {
+  display: inline-block;
+  animation: sav-twinkle 1.6s ease-in-out infinite;
+}
+
+body.sav-mode .intake__title::after { animation-delay: .8s; }
+
+@keyframes sav-twinkle {
+  0%, 100% { opacity: 1;  transform: scale(1) rotate(0deg); }
+  50%      { opacity: .45; transform: scale(1.28) rotate(18deg); }
+}
+
+body.sav-mode .intake.is-hot {
+  border-color: var(--amber);
+  background: linear-gradient(#FFFFFF, var(--amber-lift));
+  animation: sav-wiggle .4s ease-in-out infinite;
+}
+
+@keyframes sav-wiggle {
+  0%, 100% { transform: rotate(-.4deg); }
+  50%      { transform: rotate(.4deg); }
+}
+
+/* The gush: rotating, entirely unearned praise. */
+body.sav-mode .gush {
+  display: block;
+  margin: .35rem 0 0;
+  max-width: 36ch;
+  font-family: var(--display);
+  font-size: 1.3rem;
+  line-height: 1.35;
+  color: #D81B8C;
+  animation: sav-gush-in .5s cubic-bezier(.2, .7, .3, 1) both;
+}
+
+@keyframes sav-gush-in {
+  from { opacity: 0; transform: translateY(6px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Buttons: pill-shaped, gradient-filled, and far too pleased with themselves. */
+body.sav-mode .btn {
+  border-radius: 999px;
+  border-width: 2px;
+  font-weight: 700;
+  transition: transform .15s cubic-bezier(.2, .7, .3, 1), filter .15s, box-shadow .15s;
+}
+
+body.sav-mode .btn:hover { transform: scale(1.06) rotate(-1.5deg); }
+body.sav-mode .btn:active { transform: scale(.97); }
+
+body.sav-mode .btn--primary {
+  background: linear-gradient(135deg, #FF61B6 0%, #FF1F8F 55%, #E0157A 100%);
+  border-color: #FFFFFF;
+  color: #FFFFFF;
+  box-shadow: 0 4px 0 #C4126A, 0 10px 24px -8px rgba(255, 31, 143, .8);
+  text-shadow: 0 1px 2px rgba(120, 6, 62, .45);
+}
+
+body.sav-mode .btn--primary:hover { box-shadow: 0 6px 0 #C4126A, 0 16px 32px -10px rgba(255, 31, 143, .9); }
+body.sav-mode .btn--primary:active { box-shadow: 0 2px 0 #C4126A; }
+body.sav-mode .btn--primary::after { content: " 💕"; }
+body.sav-mode .btn:disabled { transform: none; box-shadow: none; }
+body.sav-mode .btn:disabled::after { content: ""; }
+
+/* Presets become collectible little pills. */
+body.sav-mode .preset { border-width: 2px; font-weight: 600; }
+body.sav-mode .preset.is-active {
+  background: linear-gradient(135deg, #FFFFFF, var(--amber-lift));
+  box-shadow: 0 2px 8px -2px rgba(255, 31, 143, .6);
+}
+body.sav-mode .preset.is-active::before { content: "👑 "; }
+
+/* The totals: the one number anyone cares about, dressed for a premiere. */
+body.sav-mode .readout__to {
+  font-family: var(--display);
+  font-size: 1.25em;
+  background: linear-gradient(135deg, #FF61B6, #FF1F8F 60%, #B0125F);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+body.sav-mode .readout__saved::after { content: " 🎀"; }
+
+body.sav-mode .readout__bar,
+body.sav-mode .row__bar {
+  height: 10px;
+  box-shadow: inset 0 0 0 2px var(--rule);
+  background-image: repeating-linear-gradient(-45deg, var(--rule-soft) 0 5px, transparent 5px 10px);
+}
+
+body.sav-mode .readout__fill,
+body.sav-mode .row__fill {
+  background: linear-gradient(90deg, #FF9AD5, #FF1F8F 60%, #D4137A);
+  box-shadow: 0 0 10px rgba(255, 31, 143, .75);
+}
+
+body.sav-mode .ledger__heading::before { content: "💖 "; }
+body.sav-mode .row__thumb { border-radius: 50%; box-shadow: 0 0 0 3px var(--amber), 0 0 0 5px #FFFFFF; }
+body.sav-mode .row__delta { font-weight: 700; }
+body.sav-mode .row:not(.is-error):not(.is-kept):not(.is-grown) .row__delta::after { content: " 💗"; }
+
+/* The veil, when you are mid-drag and need encouragement. */
+body.sav-mode .drop-veil {
+  background: color-mix(in srgb, #FF7FC4 78%, transparent);
+  color: #FFFFFF;
+  font-family: var(--display);
+  font-size: 2.25rem;
+  text-shadow: 0 2px 10px rgba(140, 8, 72, .6);
+}
+
+body.sav-mode .drop-veil::after {
+  border: 4px dashed #FFFFFF;
+  border-radius: 28px;
+  animation: sav-veil-pulse 1s ease-in-out infinite;
+}
+
+@keyframes sav-veil-pulse {
+  0%, 100% { transform: scale(1);    opacity: 1; }
+  50%      { transform: scale(.985); opacity: .7; }
+}
+
+/* Inputs keep their shape but pick up the palette. */
+body.sav-mode .field input[type="number"] { border-width: 2px; border-radius: 999px; text-align: center; }
+body.sav-mode .field input[type="range"] { accent-color: var(--amber); }
+body.sav-mode .radio input { accent-color: var(--amber); }
+body.sav-mode .sav-switch__name { color: var(--amber); font-weight: 700; }
 
 /* --- Motion --------------------------------------------------------------- */
 
