@@ -6,6 +6,8 @@
 //                     straight into the folder the user picked. Originals untouched.
 //   Safari / Firefox -- no such API, so we hand back a `compressed.zip` whose entries are
 //                     prefixed `compressed/`, which unzips to the same shape.
+//
+// A lone image with no folder to write back to skips both and downloads as itself.
 
 import { zip } from './vendor/fflate.js';
 
@@ -78,6 +80,30 @@ export async function writeToFolder(dirHandle, results, onProgress) {
 }
 
 /**
+ * Hand a blob to the browser's downloader under a given name.
+ */
+function saveAs(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = name;
+  link.click();
+
+  // Give the browser a moment to start the download before revoking the URL.
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+/**
+ * Download a single result as the image itself. Wrapping one file in a ZIP only to make the
+ * user unpack it again is busywork, so this is the default whenever there is exactly one.
+ */
+export async function downloadFile(result, onProgress) {
+  saveAs(result.blob, result.outputName);
+  onProgress?.(1, 1);
+  return 1;
+}
+
+/**
  * Build a ZIP and trigger a download. Used where the File System Access API is missing.
  */
 export async function downloadZip(results, onProgress) {
@@ -96,14 +122,7 @@ export async function downloadZip(results, onProgress) {
 
   onProgress?.(results.length, results.length);
 
-  const url = URL.createObjectURL(new Blob([zipped], { type: 'application/zip' }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'compressed.zip';
-  link.click();
-
-  // Give the browser a moment to start the download before revoking the URL.
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  saveAs(new Blob([zipped], { type: 'application/zip' }), 'compressed.zip');
 
   return results.length;
 }
