@@ -1,7 +1,7 @@
 // UI state, the worker pool, and the glue between them.
 
 import {
-  canWriteFolders, pickFolder, assignOutputNames, writeToFolder, downloadZip,
+  canWriteFolders, pickFolder, assignOutputNames, writeToFolder, downloadZip, downloadFile,
 } from './output.js';
 
 // ---------------------------------------------------------------------------
@@ -290,8 +290,10 @@ function updateSaveButton() {
     els.save.textContent = 'Compressing…';
   } else if (directoryHandle) {
     els.save.textContent = `Save ${ready} image${ready === 1 ? '' : 's'} to compressed folder`;
+  } else if (ready === 1) {
+    els.save.textContent = 'Download image';
   } else {
-    els.save.textContent = `Download ${ready} image${ready === 1 ? '' : 's'} as ZIP`;
+    els.save.textContent = `Download ${ready} images as ZIP`;
   }
 }
 
@@ -438,12 +440,23 @@ document.addEventListener('drop', async (event) => {
 
   const dropped = Array.from(event.dataTransfer.items ?? []);
 
+  // Read the drag data store up front. It is emptied the moment this handler yields, so
+  // anything still needed after an await -- the loose files, the handle request -- has to
+  // be taken while we are still synchronous.
+  const droppedFiles = Array.from(event.dataTransfer.files ?? []);
+
   // In Chrome, dropping a folder can hand us a real directory handle -- which means we can
   // write the compressed/ subfolder right back into it, exactly as if it had been picked.
-  if (canWriteFolders && dropped.length === 1 && dropped[0].kind === 'file'
-      && typeof dropped[0].getAsFileSystemHandle === 'function') {
+  // A single dropped image arrives here too, and is indistinguishable until the handle
+  // resolves, so ask for it and check the kind afterwards.
+  const handlePromise = canWriteFolders && dropped.length === 1 && dropped[0].kind === 'file'
+      && typeof dropped[0].getAsFileSystemHandle === 'function'
+    ? dropped[0].getAsFileSystemHandle()
+    : null;
+
+  if (handlePromise) {
     try {
-      const handle = await dropped[0].getAsFileSystemHandle();
+      const handle = await handlePromise;
       if (handle?.kind === 'directory') {
         const permission = await handle.requestPermission({ mode: 'readwrite' });
         const files = [];
@@ -463,7 +476,13 @@ document.addEventListener('drop', async (event) => {
     }
   }
 
-  if (event.dataTransfer.files.length) acceptFiles(event.dataTransfer.files);
+  // One image, a handful of images, or a folder we could not get a handle for.
+  if (droppedFiles.length) {
+    acceptFiles(droppedFiles);
+    return;
+  }
+
+  els.modeNotice.textContent = 'Nothing to compress in that drop';
 });
 
 // Keep the panel highlight in sync with the veil.
@@ -493,6 +512,9 @@ els.save.addEventListener('click', async () => {
         els.save.textContent = `Saving ${written} of ${total}…`;
       });
       els.save.textContent = `Saved ${ready.length} to compressed folder`;
+    } else if (ready.length === 1) {
+      await downloadFile(ready[0]);
+      els.save.textContent = 'Downloaded';
     } else {
       await downloadZip(ready);
       els.save.textContent = 'Downloaded';
