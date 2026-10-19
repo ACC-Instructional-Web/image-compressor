@@ -216,14 +216,18 @@ async function processFile(file, settings) {
   // small, already-optimised images routinely grow when re-encoded, and shipping a
   // "compressed" file that is larger than its source would be worse than doing nothing.
   //
-  // Three conditions have to hold:
+  // Four conditions have to hold:
   //  - the output really is no smaller;
   //  - we didn't resize (a capped image is a genuinely different, smaller picture, so it
   //    stays even in the rare case its byte count went up);
   //  - the source is a format the site can actually display. A 3 KB HEIC is smaller than
-  //    any WebP we could produce, but handing back the HEIC would defeat the whole job.
+  //    any WebP we could produce, but handing back the HEIC would defeat the whole job;
+  //  - the source is already in the requested format. Most people use this to turn a JPEG
+  //    into a WebP or back again, and handing back a tightly-compressed JPEG when they
+  //    asked for WebP means the conversion silently didn't happen.
+  const outputFormat = settings.format === 'image/webp' ? 'webp' : 'jpeg';
   const grew = result.blob.size >= file.size;
-  if (grew && !result.scaled && WEB_SAFE_FORMATS.has(format)) {
+  if (grew && !result.scaled && WEB_SAFE_FORMATS.has(format) && format === outputFormat) {
     return {
       blob: file,
       thumbnail: result.thumbnail,
@@ -243,7 +247,7 @@ async function processFile(file, settings) {
     blob: result.blob,
     thumbnail: result.thumbnail,
     keptOriginal: false,
-    outputFormat: settings.format === 'image/webp' ? 'webp' : 'jpeg',
+    outputFormat,
     width: result.width,
     height: result.height,
     sourceWidth,

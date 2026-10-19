@@ -101,8 +101,9 @@ Each image goes through one pipeline, in a Web Worker:
    that a 100-megapixel TIFF would otherwise hit.
 4. **Encode** to WebP or JPEG via `OffscreenCanvas.convertToBlob`. JPEG gets a white matte
    first, since it has no alpha channel.
-5. **Keep the original if the output isn't smaller** — but only for formats the web can
-   already display.
+5. **Keep the original if the output isn't smaller** — but only when the original is already
+   in the chosen output format. Converting JPEG → WebP (or back) always converts, even if the
+   result is a little bigger.
 
 A pool of up to 4 workers runs these in parallel. The cap is deliberate: decoding a dozen
 50-megapixel photos at once will exhaust the tab's memory.
@@ -124,7 +125,7 @@ python3 -m http.server 8777
 | 8000×6000 JPEG | → 3000×2250 |
 | 6000×8000 JPEG | → 2250×3000 |
 | Portrait JPEG with EXIF orientation 6 | Output is portrait, not sideways |
-| 200×200 PNG | Untouched, reported "Kept as-is" |
+| 200×200 PNG | Converts to the chosen format, even if bigger |
 | RGBA PNG | No crash, transparency handled |
 | CMYK JPEG | Decodes |
 | Deflate-compressed TIFF | Decodes (exercises the fflate/pako shim) |
