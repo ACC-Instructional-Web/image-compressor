@@ -246,8 +246,9 @@ function renderResult(item) {
     ...notes,
   ].join(' · ');
   // A conversion can legitimately grow the file -- a small HEIC is denser than any WebP we
-  // can produce -- but it still had to be converted to be usable on the site. Show that
-  // honestly rather than dressing it up as a saving.
+  // can produce, and a heavily-compressed JPEG can come out bigger as WebP -- but the user
+  // asked for that format, so it still gets converted. Show that honestly rather than
+  // dressing it up as a saving.
   node.classList.toggle('is-grown', percent <= 0);
   delta.textContent = percent > 0 ? `−${percent}%` : `+${Math.abs(percent)}%`;
   node.querySelector('.row__fill').style.width = `${(result.newSize / result.originalSize) * 100}%`;
@@ -276,7 +277,7 @@ function updateTotals() {
 
   els.totalBefore.textContent = formatBytes(before);
   els.totalAfter.textContent = formatBytes(after);
-  els.totalSaved.textContent = `${percent}% smaller`;
+  els.totalSaved.textContent = percent >= 0 ? `${percent}% smaller` : `${-percent}% larger`;
   els.totalCount.textContent = [
     `${done.length} image${done.length === 1 ? '' : 's'}`,
     failed.length ? `${failed.length} skipped` : '',
